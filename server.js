@@ -14,17 +14,21 @@ const hbs = require('hbs');
 const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads/videos';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 104857600;
+const RedisStore = require('connect-redis')(session);
+const redis = require('redis');
+const redisClient = redis.createClient();
 
-// Connect to the database
-connectDB();
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.connect();
 
 app.use(nocache())
 app.use(session({
-    secret:'mysecretkey',
-    resave:false,
-    saveUninitialized:true,
-    cookie:{
-        maxAge:1000*60*60*24
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET || 'your-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 // 1 day
     }
 }))
 
