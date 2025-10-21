@@ -16,47 +16,105 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads/videos';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 104857600;
 const RedisStore = require('connect-redis')(session);
 const redis = require('redis');
-const redisClient = redis.createClient({
-  socket: {
-    host: '127.0.0.1', // Explicitly set Redis host
-    port: 6379         // Explicitly set Redis port
-  }
-});
+// Only configure Redis if the environment explicitly provides connection info.
+// This avoids noisy ECONNREFUSED logs during local development when Redis isn't running.
+const isRedisConfigured = Boolean(process.env.REDIS_URL || process.env.REDIS_HOST || process.env.REDIS_PORT);
+let redisClient = null;
+if (isRedisConfigured) {
+  // Create redis client. Prefer REDIS_URL if provided (supports rediss:// for TLS).
+  redisClient = process.env.REDIS_URL
+    ? redis.createClient({ url: process.env.REDIS_URL })
+    : redis.createClient({
+        socket: {
+          host: process.env.REDIS_HOST || '127.0.0.1',
+          port: parseInt(process.env.REDIS_PORT, 10) || 6379
+        }
+      });
+
+  redisClient.on('error', (err) => console.error('Redis Client Error', err));
+  redisClient.on('connect', () => console.log('Redis client connecting...'));
+  redisClient.on('ready', () => console.log('Redis client ready'));
+}
 
 connectDB();
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
-redisClient.connect();
+app.use(nocache());
 
-app.use(nocache())
-app.use(session({
-    store: new RedisStore({ client: redisClient }),
+// We'll initialize the session store after attempting to connect to Redis.
+(async () => {
+  let sessionStore;
+    try {
+    if (redisClient) {
+      // Attempt to connect but don't let a rejected promise crash the app.
+      // We'll wait up to 500ms for the client to become ready and otherwise fall back.
+      let connected = false;
+      redisClient.connect().catch((err) => {
+        // connect() rejection is expected when Redis isn't available; log and continue
+        console.error('Redis connect() failed:', err && err.message ? err.message : err);
+      });
+
+      // Wait for ready or timeout
+      connected = await new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          resolve(false);
+        }, 500);
+        redisClient.once('ready', () => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+      });
+
+      if (connected && redisClient.isOpen) {
+        console.log('Connected to Redis');
+        sessionStore = new RedisStore({ client: redisClient });
+      } else {
+        console.warn('Redis not ready within timeout; proceeding without Redis session store');
+      }
+    }
+  } catch (err) {
+    console.error('Unexpected error while initializing Redis (will fall back to MemoryStore):', err);
+  }
+
+  // Fallback to MemoryStore (not suitable for production) when Redis isn't available
+  if (!sessionStore) {
+    sessionStore = new session.MemoryStore();
+    console.warn('Using in-memory session store. This is not suitable for production.');
+  }
+
+  app.use(session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'your-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 // 1 day
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
     }
-}))
+  }));
 
-//view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine','hbs');
+  // --- Remaining app setup and server start moved here so session is configured first ---
 
-// Register handlebars helpers
-hbs.registerHelper('eq', function(a, b) {
-    return String(a) === String(b);
-});
-//static assets
-app.use(express.static('public'))
-app.use(express.urlencoded({extended : true}))
-app.use(express.json())
+  //view engine setup
+  app.set('views', path.join(__dirname, 'views'));
+  app.set('view engine','hbs');
 
-app.use('/user',userRoutes)
-app.use('/admin',adminRoutes)
-app.use('/uploader', uploaderRoutes)
+  // Register handlebars helpers
+  hbs.registerHelper('eq', function(a, b) {
+      return String(a) === String(b);
+  });
+  //static assets
+  app.use(express.static('public'));
+  app.use(express.urlencoded({extended : true}));
+  app.use(express.json());
 
-app.use('/uploads', express.static('uploads'))
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-})
+  app.use('/user',userRoutes);
+  app.use('/admin',adminRoutes);
+  app.use('/uploader', uploaderRoutes);
+
+  app.use('/uploads', express.static('uploads'));
+  app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+  });
+
+})();
+
+// (App setup and server start are performed after session initialization above.)

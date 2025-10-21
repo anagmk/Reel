@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: userauth
+    runtime: node
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: REDIS_URL
+        value: "<your-redis-url>" # Replace with your Redis URL
+      - key: SESSION_SECRET
+        value: "<your-session-secret>" # Replace with your session secret
