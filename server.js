@@ -16,7 +16,14 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads/videos';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 104857600;
 const RedisStore = require('connect-redis')(session);
 const redis = require('redis');
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({
+  socket: {
+    host: '127.0.0.1', // Explicitly set Redis host
+    port: 6379         // Explicitly set Redis port
+  }
+});
+
+connectDB();
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err));
 redisClient.connect();

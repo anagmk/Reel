@@ -11,11 +11,12 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "connect-redis": "^9.0.0",
+    "connect-redis": "^5.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "hbs": "^4.2.0",
+    "mongodb": "^6.20.0",
     "mongoose": "^8.19.1",
     "multer": "^2.0.2",
     "nocache": "^4.0.0",
