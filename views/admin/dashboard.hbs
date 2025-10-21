@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+  <style>
+    /* ===== Reset & Base ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: #f4f6f8;
+      color: #1e293b;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    /* ===== Dashboard Layout ===== */
+    .admin-dashboard {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    /* ===== Header ===== */
+    .dashboard-header {
+      background: #1e293b;
+      color: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .dashboard-header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: #64748b;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* ===== Dashboard Content ===== */
+    .dashboard-content {
+      margin-top: 40px;
+    }
+
+    .users-section {
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .users-section h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .users-section p {
+      color: #64748b;
+      font-size: 1rem;
+      text-align: center;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    /* ===== Table ===== */
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .users-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .users-table tr:hover {
+      background: #f9fafb;
+    }
+
+    /* ===== Buttons ===== */
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      background: #22c55e;
+      color: white;
+      transition: 0.3s ease;
+      margin-right: 8px;
+      display: inline-block;
+    }
+
+    .btn-action:hover {
+      background: #16a34a;
+    }
+
+    .btn-danger {
+      background: #ef4444 !important;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626 !important;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .dashboard-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .users-table th,
+      .users-table td {
+        font-size: 0.9rem;
+        padding: 10px;
+      }
+
+      .users-section {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="admin-dashboard">
+    <header class="dashboard-header">
+      <h1>Admin Dashboard</h1>
+      <div class="header-actions">
+        <a href="/admin/register" class="btn btn-primary">Create New Admin</a>
+        <a href="/admin/logout" class="btn btn-secondary">Logout</a>
+        <a href="/admin/upload-video" class="btn btn-primary">Upload New Video</a>
+      </div>
+    </header>
+
+    <input type="hidden" id="message" value="{{message}}">
+
+    <div class="dashboard-content">
+      <div class="users-section">
+        <h2>Registered Accounts ({{accounts.length}})</h2>
+
+        {{#if accounts.length}}
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Registered Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each accounts}}
+            <tr>
+              <td>{{this.email}}</td>
+              <td>{{this.role}}</td>
+              <td>{{this.createdAt}}</td>
+              <td>
+                {{#if this.isUser}}
+                  <a href="/admin/user/edit/{{this._id}}" class="btn-action">Edit</a>
+                  <a href="/admin/user/delete/{{this._id}}"
+                     class="btn-action btn-danger"
+                     onclick="return confirm('Are you sure you want to delete this user?')">
+                    Delete
+                  </a>
+                {{else}}
+                  <span style="color:#64748b;font-size:0.9rem;">(admin)</span>
+                {{/if}}
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{else}}
+        <p>No accounts found</p>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const message = document.getElementById("message")?.value;
+    if (message) {
+      swal(message);
+    }
+  </script>
+</body>
+</html>

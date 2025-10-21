@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Video Admin</title>
+    
+    <style>
+        /* General Reset and Body Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6; /* Light, clean background */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Container for the form content */
+        .container {
+            background-color: #ffffff; /* White card background */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 650px; /* Max width for readability */
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Headings */
+        h1 {
+            color: #333333;
+            border-bottom: 2px solid #eeeeee;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #555555;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0; /* Light border for separation */
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+
+        /* Labels */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a4a4a;
+            font-size: 0.95em;
+        }
+
+        /* Text Inputs and Selects */
+        .form-control {
+            width: 98%;
+            padding: 12px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding/border in element's total width/height */
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #007bff; /* Primary color focus */
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        /* Special Styling for Option Input Groups */
+        .form-group > label:first-child:not(.choice-label) {
+            /* Targets "Option X" label */
+            font-weight: 700;
+            color: #333333;
+            font-size: 1em;
+        }
+
+        /* Radio Button Styling (Correct Answer) */
+        .form-group label:has(input[type="radio"]) {
+            /* This targets the 'Correct' label */
+            display: inline-flex; /* Align radio and text */
+            align-items: center;
+            margin-top: 10px;
+            margin-left: 10px;
+            font-weight: 400; /* Lighter weight for the choice itself */
+            color: #28a745; /* Green color for 'Correct' indicator */
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        /* Primary Button (Save) */
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Secondary Button (Cancel) */
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Select Dropdown for Show At */
+        select.form-control {
+            /* Custom styling for a cleaner dropdown look */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.973%20c5.3-5.3%205.3-13.8%200-19.1l-133.3-133.3c-5.3-5.3-13.8-5.3-19.1%200L5.3%20178.873c-5.3%205.3-5.3%2013.8%200%2019.1%205.3%205.3%2013.8%205.3%2019.1%200l118.4-118.4%20118.4%20118.4c5.3%205.3%2013.8%205.3%2019.1%200z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            padding-right: 30px; /* Space for the arrow */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Video</h1>
+        
+        <form action="/uploader/video/edit/{{video._id}}" method="post">
+            
+            <div class="form-group">
+                <label>Title</label>
+                <input name="title" class="form-control" value="{{video.title}}" />
+            </div>
+            <div class="form-group">
+                <label>Order</label>
+                <input name="order" class="form-control" value="{{video.order}}" />
+            </div>
+
+            <h3>Question</h3>
+            <div class="form-group">
+                <label>Question Text</label>
+                <input name="questionText" class="form-control" value="{{question.questionText}}" />
+            </div>
+
+            {{#each question.options}}
+                <div class="form-group">
+                    <label>Option {{@index}}</label>
+                    <input name="option[{{@index}}][text]" class="form-control" value="{{this.text}}" />
+                    
+                    <label>
+                        <input type="radio" name="correctAnswer" value="{{@index}}" {{#if this.isCorrect}}checked{{/if}} /> Correct
+                    </label>
+                </div>
+            {{/each}}
+
+            <div class="form-group">
+                <label>Show At</label>
+                <select name="showAt" class="form-control">
+                    <option value="during" {{#if (eq question.showAt 'during')}}selected{{/if}}>During</option>
+                    <option value="end" {{#if (eq question.showAt 'end')}}selected{{/if}}>End</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-secondary" href="/uploader/dashboard">Cancel</a>
+        </form>
+        </div>
+</body>
+</html>

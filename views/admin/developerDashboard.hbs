@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Dashboard</title>
+  <style>
+    /* Minimal style based on existing dashboard for parity */
+    body { font-family: Arial, sans-serif; background:#f4f6f8; color:#1e293b; }
+    .container{ max-width:1100px;margin:24px auto;padding:20px }
+    .header{ display:flex;justify-content:space-between;align-items:center;background:#1e293b;color:#fff;padding:16px;border-radius:8px }
+    .header a{ color:#fff;margin-left:8px }
+    .section{ background:#fff;padding:16px;border-radius:8px;margin-top:16px }
+    table{ width:100%; border-collapse: collapse }
+    th,td{ padding:8px;border-bottom:1px solid #eee }
+    .actions a{ margin-right:8px }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Developer Dashboard (Full Access)</h1>
+      <div>
+        <a href="/admin/register">Create New Admin</a>
+        <a href="/admin/upload-video">Upload New Video</a>
+        <a href="/admin/logout">Logout</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Registered Accounts ({{accounts.length}})</h2>
+      {{#if accounts.length}}
+        <table>
+          <thead><tr><th>Email</th><th>Role</th><th>Registered</th><th>Actions</th></tr></thead>
+          <tbody>
+            {{#each accounts}}
+              <tr>
+                <td>{{this.email}}</td>
+                <td>{{this.role}}</td>
+                <td>{{this.createdAt}}</td>
+                <td class="actions">
+                  {{#if this.isUser}}
+                    <a href="/admin/user/edit/{{this._id}}">Edit</a>
+                    <a href="/admin/user/delete/{{this._id}}">Delete</a>
+                  {{else}}
+                    <span>(admin)</span>
+                  {{/if}}
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{else}}
+        <p>No accounts found</p>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <h2>Videos ({{videos.length}})</h2>
+      {{#if videos.length}}
+        <table>
+          <thead><tr><th>Title</th><th>Order</th><th>Active</th><th>Actions</th></tr></thead>
+          <tbody>
+            {{#each videos}}
+              <tr>
+                <td>{{this.title}}</td>
+                <td>{{this.order}}</td>
+                <td>{{this.isActive}}</td>
+                <td>
+                  <a href="/admin/video/edit/{{this._id}}">Edit</a>
+                  <a href="/admin/video/delete/{{this._id}}">Delete</a>
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{else}}
+        <p>No videos found</p>
+      {{/if}}
+    </div>
+  </div>
+</body>
+</html>

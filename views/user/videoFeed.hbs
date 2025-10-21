@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reels Quiz Overlap</title>
+    <style>
+        /* --- CSS for Reels Scrolling & Layout --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent body scroll, container handles it */
+            font-family: Arial, sans-serif;
+            background-color: #000;
+        }
+
+        /* The container for all the "reels" */
+        .reels-container {
+            height: 100vh;
+            overflow-y: scroll; /* Enable vertical scrolling */
+            scroll-snap-type: y mandatory; /* Enable snapping for a 'Reel' effect */
+        }
+
+        /* Individual Reel Item */
+        .reel-item {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            color: white;
+            scroll-snap-align: start; /* Snap to the top of the container */
+            position: relative; /* Needed for any absolute positioning inside */
+            /* Dummy content for demonstration */
+            background-size: cover;
+            background-position: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Specific background colors/images for each reel */
+        .reel-item:nth-child(1) { background-color: #ff5733; }
+        .reel-item:nth-child(2) { background-color: #33ff57; }
+        .reel-item:nth-child(3) { background-color: #3357ff; }
+        .reel-item:nth-child(4) { background-color: #ff33a1; }
+
+
+        /* --- CSS for Overlapping Question Box --- */
+
+        .quiz-overlay {
+            position: fixed; /* Keep it in the same spot regardless of scroll */
+            bottom: 0; /* Position at the bottom of the screen */
+            left: 0;
+            width: 100%;
+            padding: 20px 10px;
+            background: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            color: white;
+            box-sizing: border-box;
+            z-index: 100; /* Ensure it stays on top of the reels */
+            transition: all 0.3s ease-in-out;
+        }
+
+        .quiz-question {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .choice-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .choice-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Style for the radio/checkbox replacement */
+        .choice-item input[type="radio"] {
+            display: none; /* Hide the actual radio button */
+        }
+
+        .custom-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        .choice-item input[type="radio"]:checked + .custom-radio {
+            background-color: #00ff80; /* Highlight when checked (a nice green) */
+            border-color: #00ff80;
+        }
+
+        .custom-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .choice-item input[type="radio"]:checked + .custom-radio::after {
+            opacity: 1; /* Show the inner dot */
+        }
+
+        /* Feedback and disabled states */
+        .choice-item.correct {
+            background-color: rgba(0, 255, 128, 0.3); /* Light green for correct */
+        }
+        .choice-item.incorrect {
+            background-color: rgba(255, 0, 0, 0.3); /* Light red for incorrect */
+        }
+        .choice-item.disabled {
+            pointer-events: none; /* Disable clicking after an answer is chosen */
+            opacity: 0.7;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #00ff80; /* Green */
+        }
+        /* Video styling */
+        .reel-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0; /* below overlay */
+            position: absolute; /* allow overlay to sit on top */
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="reels-container">
+        <div class="reel-item">
+            Reel 1: Scroll Down! 👇
+        </div>
+        <div class="reel-item">
+            Reel 2: Keep Going! 🚀
+        </div>
+        <div class="reel-item">
+            Reel 3: Almost There! 🎬
+        </div>
+        <div class="reel-item">
+            Reel 4: End of the Line! 🎉
+        </div>
+    </div>
+
+    <div class="quiz-overlay">
+        <div class="quiz-question">
+            
+        </div>
+
+        <form id="quizForm">
+            <label class="choice-item">
+                <input type="radio" name="answer" value="a">
+                <div class="custom-radio"></div>
+                <span class="choice-text"></span>
+            </label>
+
+            <label class="choice-item">
+                <input type="radio" name="answer" value="b">
+                <div class="custom-radio"></div>
+                <span class="choice-text"></span>
+            </label>
+
+            <label class="choice-item">
+                <input type="radio" name="answer" value="c">
+                <div class="custom-radio"></div>
+                <span class="choice-text"></span>
+            </label>
+
+            <label class="choice-item">
+                <input type="radio" name="answer" value="d">
+                <div class="custom-radio"></div>
+                <span class="choice-text"></span>
+            </label>
+        </form>
+
+        <div class="feedback" id="feedbackMessage"></div>
+    </div>
+
+    <script>
+        // Dynamic quiz overlay and scroll detection logic will be injected after videos load
+    </script>
+
+    <script>
+        // Fetch videos and build reels dynamically
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/user/videos');
+                if (!res.ok) throw new Error('Failed to fetch videos');
+                const data = await res.json();
+                const videos = data.videos || [];
+
+                const container = document.querySelector('.reels-container');
+                container.innerHTML = ''; // clear static reels
+
+                videos.forEach((v, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'reel-item';
+                    // store video id and question data for later use
+                    if (v._id) item.dataset.videoId = String(v._id);
+                    item.dataset.question = v.question ? JSON.stringify(v.question) : '';
+
+                    // Video element
+                    const vid = document.createElement('video');
+                    vid.src = v.videoFilePath || v.videoUrl || '';
+                    vid.controls = true;
+                    vid.muted = true;
+                    vid.playsInline = true;
+                    // also set attribute for some browsers
+                    vid.setAttribute('playsinline', '');
+                    vid.style.width = '100%';
+                    vid.style.height = '100%';
+                    vid.style.objectFit = 'cover';
+
+                    item.appendChild(vid);
+
+                    // We don't create per-reel overlays here. The page has a single fixed overlay
+                    // (`.quiz-overlay`) which will be updated dynamically when a reel becomes visible.
+
+                    container.appendChild(item);
+                });
+
+                // After building reels, wire up IntersectionObserver and overlay logic
+                const overlay = document.querySelector('.quiz-overlay');
+                const overlayQuestion = overlay.querySelector('.quiz-question');
+                const overlayForm = overlay.querySelector('#quizForm');
+                const feedbackMessage = overlay.querySelector('#feedbackMessage');
+
+                // Helper to reset overlay UI
+                function resetOverlay() {
+                    // reset answered state
+                    overlayForm.querySelectorAll('.choice-item').forEach(ci => {
+                        ci.classList.remove('disabled', 'correct', 'incorrect');
+                        const input = ci.querySelector('input[type="radio"]');
+                        if (input) input.checked = false;
+                    });
+                    feedbackMessage.textContent = '';
+                }
+
+                // Update overlay with question object
+                function updateOverlay(question) {
+                    resetOverlay();
+                    if (!question) {
+                        overlayQuestion.textContent = '';
+                        overlayForm.innerHTML = '';
+                        return;
+                    }
+
+                    overlayQuestion.textContent = question.questionText || '';
+
+                    // Build options
+                    overlayForm.innerHTML = '';
+                    question.options.forEach((opt, i) => {
+                        const label = document.createElement('label');
+                        label.className = 'choice-item';
+
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = 'answer';
+                        input.value = String(i);
+                        input.style.display = 'none';
+
+                        const custom = document.createElement('div');
+                        custom.className = 'custom-radio';
+
+                        const span = document.createElement('span');
+                        span.className = 'choice-text';
+                        span.textContent = opt.text || '';
+
+                        label.appendChild(input);
+                        label.appendChild(custom);
+                        label.appendChild(span);
+
+                        // click behavior
+                        label.addEventListener('click', async () => {
+                            // if already answered, ignore
+                            if (label.classList.contains('disabled')) return;
+
+                            // optimistic disable
+                            overlayForm.querySelectorAll('.choice-item').forEach(ci => ci.classList.add('disabled'));
+
+                            // send to backend for validation
+                            try {
+                                const payload = {
+                                    questionId: question._id,
+                                    selectedOption: i,
+                                    videoId: item.dataset.videoId || null
+                                };
+
+                                const resp = await fetch('/user/submit-answer', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload)
+                                });
+
+                                if (!resp.ok) throw new Error('Failed to submit');
+                                const result = await resp.json();
+
+                                if (result.isCorrect) {
+                                    label.classList.add('correct');
+                                    feedbackMessage.textContent = '✅ Correct!';
+                                    feedbackMessage.style.color = '#00ff80';
+                                } else {
+                                    label.classList.add('incorrect');
+                                    feedbackMessage.textContent = '❌ Incorrect.';
+                                    feedbackMessage.style.color = '#ff5733';
+                                    // highlight correct
+                                    const correctIdx = result.correctAnswer;
+                                    overlayForm.querySelectorAll('.choice-item').forEach((ci, idx) => {
+                                        if (idx === correctIdx) ci.classList.add('correct');
+                                    });
+                                }
+
+                            } catch (err) {
+                                console.error('Submit answer error', err);
+                                feedbackMessage.textContent = 'Error submitting answer';
+                                feedbackMessage.style.color = '#ff5733';
+                            }
+                        });
+
+                        overlayForm.appendChild(label);
+                    });
+                }
+
+                // IntersectionObserver to detect visible reel
+                const items = Array.from(document.querySelectorAll('.reel-item'));
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const el = entry.target;
+                        const vid = el.querySelector('video');
+                        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                            // Play this video
+                            try { vid.play(); } catch(e){}
+                            // Update overlay with this video's question
+                            const qdata = el.dataset.question ? JSON.parse(el.dataset.question) : null;
+                            updateOverlay(qdata);
+                        } else {
+                            // Pause video when not visible
+                            try { if (vid && !vid.paused) vid.pause(); } catch(e){}
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                items.forEach(it => observer.observe(it));
+
+            } catch (err) {
+                console.error('Error loading videos:', err);
+            }
+        });
+    </script>
+
+</body>
+</html>
